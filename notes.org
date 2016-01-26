@@ -1,0 +1,43 @@
+* krivine machine
+- state machine for lambda calculus
+- very simple:
+  - state is = (Term, [Pair], [Pair])
+        Pair = (Term, [Pair])
+    Term = Ref Nat | App Term Term | Lambda Term
+
+    fst stack = argument stack
+    snd stack = environment stack
+
+  - "4" rewrite rules
+    (0) kr (App f x, xs, c) = (f, Pair x c : xs, c)
+    (1) kr (Lam b, (v : xs), c) = (b, xs, v : c)
+   
+    (2) kr (R O, s, (Pair v c : _)) = (v, s, c)
+    (3) kr (R (S n), s, _ : c) = (R n, s, c)
+ 
+   (1') kr s@(Lam b, _, _) = s
+
+* interpretation
+- app pushes a term to the argument stack (0).
+  lambda moves an entry from the argument stack to the environment stack (1).
+  ref counts down the environment stack until it finds the right term (3),
+    then proceeds to evaluate it (2).
+  an unapplied lambda is in normal form (1').
+
+* basic observations
+- an element of the argument stack stores a term and all the context
+  needed to finish evaluating it
+
+- evaluation strategy is call by name.
+
+- de bruijn index naming strategy. Ref n means, the thing bound by the
+  nth binder, counting outwards.
+
+- closures are created around arguments, rather than lambda applications
+
+- nothing needed to avoid capture
+
+* from krivine
+- originally conceived to grant meaningful execution to programs derived from proofs
+- 'classical realizability'
+
