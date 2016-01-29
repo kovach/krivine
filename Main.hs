@@ -6,26 +6,27 @@ import Control.Arrow (first, second)
 
 import Types
 
-kr :: S -> S
--- OPTIMIZE --
---kr (Lam b, (Pair (R       O)           (v : _)) : xs, c) = (b, xs, v : c)
---kr (Lam b, (Pair (R    (S O))      (_ : v : _)) : xs, c) = (b, xs, v : c)
-kr (Lam b, (Pair (R (S (S O))) (_ : _ : v : _)) : xs, c) = (b, xs, v : c)
+kr :: S -> Maybe S
 -- standard machine --
-kr (Lam b, (v : xs), c) = (b, xs, v : c)
-kr (App f x, xs, c) = (f, Pair x c : xs, c)
-kr (R O, s, (Pair v c : _)) = (v, s, c)
-kr (R (S n), s, _ : c) = (R n, s, c)
-kr s@(Lam b, _, _) = s
+kr (Lam b, (v : xs), c) = Just (b, xs, v : c)
+kr (App f x, xs, c) = Just (f, Pair x c : xs, c)
+kr (R O, s, (Pair v c : _)) = Just (v, s, c)
+kr (R (S n), s, _ : c) = Just (R n, s, c)
+kr s@(Lam b, _, _) = Nothing
 -- Symbols -- 
-kr s@(Atom _, _, _) = s
+kr s@(Atom _, _, _) = Nothing
 
 kr (x, _, _) = error $ show x
 
+tr (_, y, x) = length x + length y
+
 reduce :: Int -> S -> (Int, S)
 reduce n s =
-  let s' = kr s
-  in if s' == s then (n, s) else reduce (n+1) s'
+  let ms = kr s
+      n' = n+1
+  in case ms of
+       Just s' -> reduce n' s'
+       Nothing -> (n, s)
 
 term :: E -> S
 term e = (e, [], [])
@@ -70,3 +71,5 @@ chk t =
   in (n, a)
 
 asdf = map (\i -> chk $ App ((iterate (compose id) id) !! i) id) [0..9]
+
+main = print $ chk $ dotest 222
